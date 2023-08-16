@@ -106,7 +106,7 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons, excel = tr
                                         case "BUTTON":
                                             break;
                                         default:
-                                            debugger;
+                                            html.push(el.innerText);
                                     }
                                 }
                             }
