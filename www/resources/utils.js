@@ -1,6 +1,6 @@
-const ISFIREFOX=navigator.userAgent.search("Firefox");
+const ISFIREFOX = navigator.userAgent.search("Firefox");
 
-function smartTable({ root, refresh, columns, onadd, filter, buttons }) {
+function smartTable({ root, refresh, columns, onadd, filter, buttons, excel = true }) {
     let data;
 
     root.innerHTML = ""; // just start from empty
@@ -37,14 +37,22 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons }) {
         tfooter.appendChild(tr);
         let html = [];
         if (buttons) {
-            html.push('<td>');
+            html.push(`<td colspan="${columns.length - 1}">`);
             for (let b in buttons) {
                 html.push(`<button class="btn btn-outline-secondary">${b}</button>`);
             }
-            html.push('</td>');
-            html.push(`<td colspan="${columns.length - 1}">`);
+            if (excel && (typeof XLSX != "undefined")) {
+                html.push(`<button title="Export to Excel" class="icon spreadsheet">X</button>`)
+            }
+            html.push('</td><td>');
         } else {
-            html.push(`<td colspan="${columns.length}">`);
+            if (excel && (typeof XLSX != "undefined")) {
+                html.push(`<td colspan="${columns.length - 1}">`);
+                html.push(`<button title="Export to Excel" class="icon spreadsheet">X</button>`)
+                html.push(`</td><td>`);
+            } else {
+                html.push(`<td colspan="${columns.length}">`);
+            }
         }
         html.push(`<button class="btn btn-outline-secondary">+</button></td>`);
         tr.innerHTML = html.join('');
@@ -52,9 +60,67 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons }) {
             tr.querySelector('td:last-child button').addEventListener("click", onadd);
         }
         if (buttons) {
-            tr.querySelector('td:first-child button').addEventListener("click", (event) => {
+            tr.querySelector('td:first-child button.btn').addEventListener("click", (event) => {
                 event.preventDefault();
                 buttons[event.target.innerHTML](event);
+            });
+        }
+        if (excel && (typeof XLSX != "undefined")) {
+            tr.querySelector('td:first-child button.icon').addEventListener("click", (event) => {
+                // create a table easier to process.
+                let table=document.createElement("TABLE");
+                let thead=root.querySelector("thead");
+                if (thead) {
+                    table.appendChild(thead.cloneNode(true));
+                }
+                let tbody=root.querySelector("tbody");
+                if (tbody) {
+                    let html=[];
+                    for(let i=0; i<tbody.children.length; i++) {
+                        let tr=tbody.children[i];
+                        html.push('<tr>');
+                        for(let j=0; j<tr.children.length; j++) {
+                            let td=tr.children[j];
+                            html.push('<td>');
+                            td: for(let k=0; k<td.childNodes.length; k++) {
+                                let el=td.childNodes[k];
+                                if (el instanceof Text) {
+                                    html.push(el.data);
+                                } else if (el instanceof HTMLElement) {
+                                    switch (el.tagName) {
+                                        case "INPUT":
+                                            switch (el.getAttribute('type')) {
+                                                case 'checkbox':
+                                                case 'radio':
+                                                    html.push(el.checked);
+                                                    break;
+                                                case 'button':
+                                                    break;
+                                                default:
+                                                    html.push(el.value);
+                                            }
+                                            break;
+                                        case "SELECT":
+                                            html.push([...el.querySelectorAll('option:checked')].map((o)=>o.innerText).join(' / '));
+                                            break td;
+                                        case "BUTTON":
+                                            break;
+                                        default:
+                                            debugger;
+                                    }
+                                }
+                            }
+                            html.push('</td>');
+                        }
+                        html.push('</tr>');
+                    }
+                    let tgt=document.createElement("tbody");
+                    tgt.innerHTML=html.join('');
+                    table.appendChild(tgt);
+                }
+                // do not add tfoot
+                let wb = XLSX.utils.table_to_book(table, { sheet: "export" });
+                XLSX.writeFile(wb, 'export.xlsx');
             });
         }
     }
@@ -100,10 +166,10 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons }) {
                 td.innerHTML = col.render(row);
             }
             if ("onedit" in col) {
-                let input=document.createElement("INPUT");
-                input.value=td.innerText;
-                td.innerText="";
-                td.setAttribute("class","editable");
+                let input = document.createElement("INPUT");
+                input.value = td.innerText;
+                td.innerText = "";
+                td.setAttribute("class", "editable");
                 td.appendChild(input);
                 td.setAttribute("data-value", td.innerText); //memoize content of td
                 input.addEventListener('input', (event) => {
@@ -132,7 +198,7 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons }) {
                     }
                 });
                 input.addEventListener('focusout', (event) => {
-                    let val=input.value;
+                    let val = input.value;
                     if (val != td.getAttribute("data-value")) {
                         td.setAttribute("data-value", val);
                         let idx = [...td.parentElement.parentElement.children].indexOf(td.parentElement);
@@ -262,15 +328,15 @@ function smartmodal(el) {
         },
         button(index, action) {
             let btn;
-            if (index>=0) {
+            if (index >= 0) {
                 btn = clone.querySelectorAll('.modal-footer button')[index];
             } else {
                 btn = clone.querySelector('.btn-close');
             }
             btn.addEventListener('click', (event) => {
                 action(event, ret, index);
-            });    
-    },
+            });
+        },
         modal,
         el: clone,
         show() {
@@ -442,8 +508,8 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
 
     function data(d) {
         if (extraParams) {
-            let n=extraParams();
-            for(let k in n) d[k]=n[k];
+            let n = extraParams();
+            for (let k in n) d[k] = n[k];
         }
         return d;
     }
@@ -489,7 +555,7 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
             onmessage(selected, count); // notify
             if (selected == msg.chat) { // still in right chat
                 let div = renderMessage(msg);
-                appendMessage(div,msg,count);
+                appendMessage(div, msg, count);
                 if (canSend && document.activeElement == mdiv.querySelector('.senddiv input')) {
                     mdiv.lastChild.scrollIntoView();
                 }
@@ -595,11 +661,11 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
     function appendMessage(div, msg, count) {
         if (count > 1) { // merge with previous bubble ?
             let last = mdiv.children[mdiv.children.length - 1 - (canSend === true ? 1 : 0)];
-            let hasFile=last.querySelector("a")!=null;
+            let hasFile = last.querySelector("a") != null;
             let otime = parseInt(last.getAttribute("data-ts")) / 1000;
             let ouser = last.getAttribute("data-user");
             let ctime = new Date(msg.creation).getTime() / 1000;
-            if (msg.user != ouser || ctime - otime > 15 * 60 || (msg.file!=null)!=hasFile) {
+            if (msg.user != ouser || ctime - otime > 15 * 60 || (msg.file != null) != hasFile) {
                 mdiv.insertBefore(div, mdiv.lastChild);
             } else {
                 last.lastChild.appendChild(document.createElement("BR"));
@@ -620,19 +686,19 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
         let div = null;
         let ouid = null;
         let otime = null;
-/*        for (let i = 0; i < messages.length; i++) {
-            let ctime = new Date(messages[i].creation).getTime() / 1000;
-            let msg = renderMessage(messages[i]);
-            if (messages[i].user != ouid || ctime - otime > 15 * 60) {
-                mdiv.appendChild(msg);
-                div = msg;
-                otime = ctime;
-                ouid = messages[i].user;
-            } else {
-                div.children[1].appendChild(document.createElement("BR"));
-                div.children[1].appendChild(msg.querySelector(".msgcnt").childNodes[0]);
-            }
-        }*/
+        /*        for (let i = 0; i < messages.length; i++) {
+                    let ctime = new Date(messages[i].creation).getTime() / 1000;
+                    let msg = renderMessage(messages[i]);
+                    if (messages[i].user != ouid || ctime - otime > 15 * 60) {
+                        mdiv.appendChild(msg);
+                        div = msg;
+                        otime = ctime;
+                        ouid = messages[i].user;
+                    } else {
+                        div.children[1].appendChild(document.createElement("BR"));
+                        div.children[1].appendChild(msg.querySelector(".msgcnt").childNodes[0]);
+                    }
+                }*/
         if (canSend === true) {
             div = document.createElement("DIV");
             div.setAttribute("class", "senddiv");
@@ -751,10 +817,10 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
                 listen: broadcastListener !== false
             }),
             success(response) {
-                let count=parseInt(mdiv.getAttribute("data-count"));
-                for(let i=count; i<response.length; i++) {
-                    let div=renderMessage(response[i]);
-                    appendMessage(div,response[i],i);
+                let count = parseInt(mdiv.getAttribute("data-count"));
+                for (let i = count; i < response.length; i++) {
+                    let div = renderMessage(response[i]);
+                    appendMessage(div, response[i], i);
                 }
                 mdiv.setAttribute("data-count", response.length);
                 if (urlcount) {
@@ -765,8 +831,8 @@ function messageBoard({ el: mdiv, urlcreate, urlforget, urlget, urlcount, urlupl
                 }
                 onmessage(chat, response.length);
             },
-            reconnect:()=>{
-                if (selected==chat) reconnect(chat);
+            reconnect: () => {
+                if (selected == chat) reconnect(chat);
             }
         })
     }
@@ -815,39 +881,40 @@ window.addEventListener("drop", (event) => {
     event.preventDefault();
 })
 
-const gantt=(()=>{
+const gantt = (() => {
 
     const palette = ['#5BC0EB', '#FDE74C', '#9BC53D', '#C3423F', '#211A1E', "#a3d9ff", "#7e6b8f", "#96e6b3", "#da3e52", "#f2e94e"];
 
     //https://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-    const pSBC=(p,c0,c1,l)=>{
-        let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
-        if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
-        if(!this.pSBCr)this.pSBCr=(d)=>{
-            let n=d.length,x={};
-            if(n>9){
-                [r,g,b,a]=d=d.split(","),n=d.length;
-                if(n<3||n>4)return null;
-                x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
-            }else{
-                if(n==8||n==6||n<4)return null;
-                if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
-                d=i(d.slice(1),16);
-                if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
-                else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
-            }return x};
-        h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
-        if(!f||!t)return null;
-        if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
-        else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
-        a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
-        if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
-        else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
+    const pSBC = (p, c0, c1, l) => {
+        let r, g, b, P, f, t, h, i = parseInt, m = Math.round, a = typeof (c1) == "string";
+        if (typeof (p) != "number" || p < -1 || p > 1 || typeof (c0) != "string" || (c0[0] != 'r' && c0[0] != '#') || (c1 && !a)) return null;
+        if (!this.pSBCr) this.pSBCr = (d) => {
+            let n = d.length, x = {};
+            if (n > 9) {
+                [r, g, b, a] = d = d.split(","), n = d.length;
+                if (n < 3 || n > 4) return null;
+                x.r = i(r[3] == "a" ? r.slice(5) : r.slice(4)), x.g = i(g), x.b = i(b), x.a = a ? parseFloat(a) : -1
+            } else {
+                if (n == 8 || n == 6 || n < 4) return null;
+                if (n < 6) d = "#" + d[1] + d[1] + d[2] + d[2] + d[3] + d[3] + (n > 4 ? d[4] + d[4] : "");
+                d = i(d.slice(1), 16);
+                if (n == 9 || n == 5) x.r = d >> 24 & 255, x.g = d >> 16 & 255, x.b = d >> 8 & 255, x.a = m((d & 255) / 0.255) / 1000;
+                else x.r = d >> 16, x.g = d >> 8 & 255, x.b = d & 255, x.a = -1
+            } return x
+        };
+        h = c0.length > 9, h = a ? c1.length > 9 ? true : c1 == "c" ? !h : false : h, f = this.pSBCr(c0), P = p < 0, t = c1 && c1 != "c" ? this.pSBCr(c1) : P ? { r: 0, g: 0, b: 0, a: -1 } : { r: 255, g: 255, b: 255, a: -1 }, p = P ? p * -1 : p, P = 1 - p;
+        if (!f || !t) return null;
+        if (l) r = m(P * f.r + p * t.r), g = m(P * f.g + p * t.g), b = m(P * f.b + p * t.b);
+        else r = m((P * f.r ** 2 + p * t.r ** 2) ** 0.5), g = m((P * f.g ** 2 + p * t.g ** 2) ** 0.5), b = m((P * f.b ** 2 + p * t.b ** 2) ** 0.5);
+        a = f.a, t = t.a, f = a >= 0 || t >= 0, a = f ? a < 0 ? t : t < 0 ? a : a * P + t * p : 0;
+        if (h) return "rgb" + (f ? "a(" : "(") + r + "," + g + "," + b + (f ? "," + m(a * 1000) / 1000 : "") + ")";
+        else return "#" + (4294967296 + r * 16777216 + g * 65536 + b * 256 + (f ? m(a * 255) : 0)).toString(16).slice(1, f ? undefined : -2)
     }
 
     const darkPalette = [];
     for (let i = 0; i < palette.length; i++) {
-        darkPalette.push(pSBC(-0.4,palette[i]));
+        darkPalette.push(pSBC(-0.4, palette[i]));
     }
 
     function create(el) {
@@ -856,7 +923,7 @@ const gantt=(()=>{
         let tasks = [];
         function toDate(d) {
             return new Date(d).toLocaleDateString();
-        }    
+        }
         let old = {};
 
 
@@ -917,10 +984,10 @@ const gantt=(()=>{
         };
 
         function refreshGantt(data) {
-            let oldtasks=tasks;
+            let oldtasks = tasks;
             tasks = [];
             let min = Number.MAX_VALUE;
-            let today=Math.floor(new Date().getTime() / DAY);
+            let today = Math.floor(new Date().getTime() / DAY);
             for (let i = 0; i < data.length; i++) {
                 let row = data[i];
                 if (row.start_date != null && row.end_date != null) {
@@ -944,14 +1011,14 @@ const gantt=(()=>{
                     delete old.gantt;
                 }
             } else {
-                if (tasks.length==oldtasks.length) {
-                    let same=true;
-                    for(let i=0; i<tasks.length; i++) {
-                        if (tasks[i].label!=oldtasks[i].label) same=false;
-                        if (tasks[i].start_date!=oldtasks[i].start_date) same=false;
-                        if (tasks[i].end_date!=oldtasks[i].end_date) same=false;
-                        if (tasks[i].sd!=oldtasks[i].sd) same=false;
-                        if (tasks[i].ed!=oldtasks[i].ed) same=false;
+                if (tasks.length == oldtasks.length) {
+                    let same = true;
+                    for (let i = 0; i < tasks.length; i++) {
+                        if (tasks[i].label != oldtasks[i].label) same = false;
+                        if (tasks[i].start_date != oldtasks[i].start_date) same = false;
+                        if (tasks[i].end_date != oldtasks[i].end_date) same = false;
+                        if (tasks[i].sd != oldtasks[i].sd) same = false;
+                        if (tasks[i].ed != oldtasks[i].ed) same = false;
                         if (!same) break;
                     }
                     if (same) return;
@@ -960,9 +1027,9 @@ const gantt=(()=>{
                     old.gantt.destroy();
                     delete old.gantt;
                 }
-        
+
                 el.style.display = "block";
-    
+
                 referenceDate = min;
                 let labels = [];
                 let skip = [];
@@ -971,10 +1038,10 @@ const gantt=(()=>{
                 for (let i = 0; i < tasks.length; i++) {
                     labels.push(tasks[i].label);
                     skip.push(tasks[i].sd - min);
-                    if (tasks[i].ed<today) {
+                    if (tasks[i].ed < today) {
                         before.push(tasks[i].ed - tasks[i].sd + 1);
                         after.push(0);
-                    } else if (tasks[i].sd>today) {
+                    } else if (tasks[i].sd > today) {
                         before.push(0);
                         after.push(tasks[i].ed - tasks[i].sd + 1);
                     } else {
@@ -982,8 +1049,8 @@ const gantt=(()=>{
                         after.push(tasks[i].ed - today + 1);
                     }
                 }
-    
-    
+
+
                 old.gantt = new Chart(el, {
                     type: 'horizontalBar',
                     data: {
@@ -992,7 +1059,7 @@ const gantt=(()=>{
                             data: skip,
                             backgroundColor: "rgba(63,103,126,0)",
                             hoverBackgroundColor: "rgba(50,90,100,0)"
-    
+
                         }, {
                             data: before,
                             backgroundColor: darkPalette,
@@ -1005,9 +1072,9 @@ const gantt=(()=>{
                 });
             }
         }
-    
+
         return {
-            refresh:refreshGantt
+            refresh: refreshGantt
         }
     }
 
@@ -1016,121 +1083,121 @@ const gantt=(()=>{
         destroy() {
             if ("gantt" in old) {
                 old.gantt.destroy();
-                tasks=[];
+                tasks = [];
                 delete old.gantt;
             }
         },
         palette,
         darkPalette
-    }    
+    }
 
 })();
 
 function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;
-  }
-  
-  function rgbToHex(r, g, b) {
-    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-  }
+}
 
-const progress=((config)=>{
-    let root=config.root;
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+const progress = ((config) => {
+    let root = config.root;
     if (!root.classList.contains("progress")) root.classList.add("progress");
     function set(v) {
-        root.innerHTML="";
-        let count=v.length;
-        if (count==0) {
-            root.innerHTML="No task yet";
-            root.setAttribute("data-actual",0);
+        root.innerHTML = "";
+        let count = v.length;
+        if (count == 0) {
+            root.innerHTML = "No task yet";
+            root.setAttribute("data-actual", 0);
             return;
         }
-        let actual=0;
-        for(let i=0; i<count; i++) actual+=v[i].length;
-        if (actual==0) { // cannot make any estimate
-            for(let i=0; i<count; i++) {
-                let span=document.createElement("SPAN");
-                span.style.width=(100/count)+"%";
-                span.innerText=v[i].description;
-                span.setAttribute("title",v[i].description);
+        let actual = 0;
+        for (let i = 0; i < count; i++) actual += v[i].length;
+        if (actual == 0) { // cannot make any estimate
+            for (let i = 0; i < count; i++) {
+                let span = document.createElement("SPAN");
+                span.style.width = (100 / count) + "%";
+                span.innerText = v[i].description;
+                span.setAttribute("title", v[i].description);
                 span.classList.add("unknown");
                 root.appendChild(span);
             }
-            root.setAttribute("data-actual",0);
+            root.setAttribute("data-actual", 0);
             return;
         }
         // split between those with some length and those without
-        let g1=[], g2=[], g3=[];
-        let estimated=0;
-        let minprogress=100;
-        for(let i=0; i<count; i++) {
-            if (v[i].length==0) {
+        let g1 = [], g2 = [], g3 = [];
+        let estimated = 0;
+        let minprogress = 100;
+        for (let i = 0; i < count; i++) {
+            if (v[i].length == 0) {
                 g2.push({
-                    description:v[i].description,
-                    length:0,
-                    progress:0,
-                    unknown:true
+                    description: v[i].description,
+                    length: 0,
+                    progress: 0,
+                    unknown: true
                 });
-            } else if (v[i].progress==0) {
+            } else if (v[i].progress == 0) {
                 g3.push({
-                    description:v[i].description,
-                    length:v[i].length,
-                    progress:0,
-                    unknown:true
+                    description: v[i].description,
+                    length: v[i].length,
+                    progress: 0,
+                    unknown: true
                 });
             } else {
-                minprogress=Math.min(minprogress, v[i].progress);
-                let e=(100/v[i].progress)*v[i].length;
+                minprogress = Math.min(minprogress, v[i].progress);
+                let e = (100 / v[i].progress) * v[i].length;
                 g1.push({
-                    description:v[i].description,
-                    length:v[i].length,
-                    progress:v[i].progress,
-                    estimate:e
+                    description: v[i].description,
+                    length: v[i].length,
+                    progress: v[i].progress,
+                    estimate: e
                 });
-                estimated+=e;
+                estimated += e;
             }
         }
         // for the tasks with no length, we estimate them by using the mean of estimated tasks
-        for(let i=0; i<g2.length; i++) {
-            g2[i].estimate=estimated/g1.length;
+        for (let i = 0; i < g2.length; i++) {
+            g2[i].estimate = estimated / g1.length;
         }
         // for the tasks with no progress, we estimate them by minprogress
-        for(let i=0; i<g3.length; i++) {
-            let e=(100/minprogress)*g3[i].length;
-            g3[i].estimate=e;
-            estimated+=e;
+        for (let i = 0; i < g3.length; i++) {
+            let e = (100 / minprogress) * g3[i].length;
+            g3[i].estimate = e;
+            estimated += e;
         }
-        g1.sort((a,b)=>b.length/b.estimate-a.length/a.estimate);
-        g1.push.apply(g1,g3);
+        g1.sort((a, b) => b.length / b.estimate - a.length / a.estimate);
+        g1.push.apply(g1, g3);
         // update estimated
-        estimated=estimated+(estimated/g1.length)*g2.length;
+        estimated = estimated + (estimated / g1.length) * g2.length;
         // now sort g2, most finished first
         // append g2 to g1
-        g1.push.apply(g1,g2);
+        g1.push.apply(g1, g2);
         // build result
-        for(let i=0; i<g1.length; i++) {
-            let span=document.createElement("SPAN");
-            span.style.width=(g1[i].estimate/estimated)*100+"%";
-            span.innerText=g1[i].description;
-            span.setAttribute("title",g1[i].description+" "+g1[i].progress+"% "+g1[i].length+"min");
-            if (g1[i].unknown===true) {
+        for (let i = 0; i < g1.length; i++) {
+            let span = document.createElement("SPAN");
+            span.style.width = (g1[i].estimate / estimated) * 100 + "%";
+            span.innerText = g1[i].description;
+            span.setAttribute("title", g1[i].description + " " + g1[i].progress + "% " + g1[i].length + "min");
+            if (g1[i].unknown === true) {
                 span.classList.add("unknown");
             } else {
-                let progress=g1[i].length/g1[i].estimate;
-                let r,g;
-                if (progress<0.5) {
-                    r=255;
-                    g=Math.round(255*(progress*2));
+                let progress = g1[i].length / g1[i].estimate;
+                let r, g;
+                if (progress < 0.5) {
+                    r = 255;
+                    g = Math.round(255 * (progress * 2));
                 } else {
-                    g=255;
-                    r=Math.round(255*((1-progress)*2))
+                    g = 255;
+                    r = Math.round(255 * ((1 - progress) * 2))
                 }
-                span.style.backgroundColor=rgbToHex(r,g,0);    
+                span.style.backgroundColor = rgbToHex(r, g, 0);
             }
             root.appendChild(span);
         }
-        root.setAttribute("data-actual",actual);
+        root.setAttribute("data-actual", actual);
     }
 
 

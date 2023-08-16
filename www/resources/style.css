@@ -591,3 +591,10 @@ h3 {
 .multiselect-dropdown span.optext {
     display: ruby !important;
 }
+
+.icon.spreadsheet {
+    color: white;
+    background-color: #217346;
+    box-shadow: 1px 1px 1px 1px darkgray;
+    margin-left: 10px;
+}
