@@ -352,6 +352,10 @@ button.messages .total {
     min-width: 50%;
 }*/
 
+.table-responsive .editable input {
+    width:100%;
+}
+
 .table-responsive thead>tr>th+th {
     width: auto;
 }
