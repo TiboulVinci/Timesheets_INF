@@ -583,3 +583,7 @@ h3 {
 .progresses {
     font-size:14px;
 }
+
+.multiselect-dropdown span.optext {
+    display: ruby !important;
+}
