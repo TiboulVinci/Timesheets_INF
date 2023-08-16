@@ -10,4 +10,4 @@ This is a tool used to supervise students doing group projets.
 5. In server/config.js, change the other keys as needed.
 6. Create www/favicon.ico and www/logo.png with your own logo.
 7. Run "node createAdmin.js email password" replacing email and password with the superadmin email and password.
-8. Run "node server/server.js" to run the server
+8. Run "node server/server.js" to run the server.
