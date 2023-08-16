@@ -348,9 +348,9 @@ button.messages .total {
     border-bottom: solid 1px darkgray;
 }
 
-.table-responsive thead>tr>th {
+/*.table-responsive thead>tr>th {
     min-width: 50%;
-}
+}*/
 
 .table-responsive thead>tr>th+th {
     width: auto;
