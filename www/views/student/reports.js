@@ -1,7 +1,6 @@
 (() => {
 
     feather.replace({ 'aria-hidden': 'true' })
-    const palette = ['#5BC0EB', '#FDE74C', '#9BC53D', '#C3423F', '#211A1E', "#a3d9ff", "#7e6b8f", "#96e6b3", "#da3e52", "#f2e94e"];
 
     let old = {};
     function getUniverse() {
@@ -47,7 +46,7 @@
                     for (let k in response.slices) {
                         data.push(peruser[u][k] || 0);
                     }
-                    let color = palette[idx % palette.length];
+                    let color = getPaletteColor(idx);
                     idx++;
                     datasets.push({
                         data,
@@ -96,7 +95,7 @@
                         datasets: [
                             {
                                 data,
-                                backgroundColor: palette.slice(0, data.length)
+                                backgroundColor: getPaletteColors(data.length)
                             }
                         ]
                     },
@@ -144,7 +143,7 @@
                             datasets: [
                                 {
                                     data,
-                                    backgroundColor: palette.slice(0, data.length)
+                                    backgroundColor: getPaletteColors(data.length)
                                 }
                             ]
                         },
