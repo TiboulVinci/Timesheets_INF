@@ -172,11 +172,11 @@
             }, {
                 title: "Action",
                 render(row) {
-                    if (row.creator_id == mispaf.user.user_id) {
+                    if (row.creator_id == mispaf.user.user_id || mispaf.user.superadmin === true) {
                         return `<button class="btn btn-outline-secondary btn-sm export">Excel...</button> <button class="btn btn-outline-secondary btn-sm delete">Delete</button>`;
                     } else {
                         // as an assistant, I can remove myself from the universe
-                        return `<button class="btn btn-outline-secondary btn-sm export">Excel...</button><button class="btn btn-outline-secondary btn-sm leave" title="Remove yourself as an assistant from this universe">Leave</button>`;
+                        return `<button class="btn btn-outline-secondary btn-sm export">Excel...</button> <button class="btn btn-outline-secondary btn-sm leave" title="Remove yourself as an assistant from this universe">Leave</button>`;
                     }
                 },
                 onevent: {
@@ -222,13 +222,13 @@
                     },
                     'click:button.export': async (event, row) => {
                         if (await modalConfirm("Do you want to export all timesheets data of " + row.name + " to Excel ?")) {
-                            let form=document.createElement('form');
-                            form.setAttribute('method','POST');
-                            form.setAttribute('action','universes/export');
-                            let input=document.createElement('input');
-                            input.setAttribute('type','hidden');
-                            input.setAttribute('name','universe_id');
-                            input.value=row.universe_id;
+                            let form = document.createElement('form');
+                            form.setAttribute('method', 'POST');
+                            form.setAttribute('action', 'universes/export');
+                            let input = document.createElement('input');
+                            input.setAttribute('type', 'hidden');
+                            input.setAttribute('name', 'universe_id');
+                            input.value = row.universe_id;
                             form.appendChild(input);
                             document.body.appendChild(form);
                             form.submit();

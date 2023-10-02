@@ -12,6 +12,16 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\server\\server.js"
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "Launch Demo",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\server\\server.js",
+            "args": ["server/demo.js"]
         }
     ]
 }

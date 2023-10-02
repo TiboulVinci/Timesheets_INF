@@ -1,7 +1,17 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const config = require("./config.js");
+const config=(()=>{
+    const args=process.argv;
+    if (args.length>0) {
+        let js=args[args.length-1];
+        if (js.toLowerCase().endsWith(".js")) {
+            return require(path.join("..",js));
+        }
+    }
+    return require("./config.js");
+})();
+
 const db = require("better-sqlite3")(config.dbfile);
 const jwt = require("jsonwebtoken");
 const { AsyncLocalStorage } = require('async_hooks');
