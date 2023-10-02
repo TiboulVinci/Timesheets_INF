@@ -1,12 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const config=(()=>{
-    const args=process.argv;
-    if (args.length>0) {
-        let js=args[args.length-1];
-        if (js.toLowerCase().endsWith(".js")) {
-            return require(path.join("..",js));
+const config = (() => {
+    const args = process.argv;
+    if (args.length > 0) {
+        let js = args[args.length - 1];
+        if (js.toLowerCase().endsWith(".js") && js.toLowerCase() != "server.js") {
+            return require(path.join("..", js));
         }
     }
     return require("./config.js");
@@ -145,14 +145,14 @@ const manager = (() => {
             } else {
                 begin.run();
                 try {
-                    let ret=await controler[action](params);
+                    let ret = await controler[action](params);
                     commit.run();
                     return ret;
                 } finally {
                     if (db.inTransaction) {
                         rollback.run();
                     }
-                }    
+                }
             }
         }
 
@@ -253,18 +253,18 @@ const manager = (() => {
         })
 
         if (wsMode == true) {
-            let sid=0;
+            let sid = 0;
             if (config.websocket !== true) {
                 throw new Error(path + " uses a websocket while it is not enabled in config.js. Add websocket:true to enable.");
             }
             server.ws(path, function (ws, req) {
-                ws.sid=sid++;
+                ws.sid = sid++;
                 let user = getUser(req, null);
-                ws.on('close', function(){ // remove all listeners for this client
-                    for(let k in wsListeners) {
-                        let l=wsListeners[k];
-                        for(let i=l.length-1; i>=0; i--) {
-                            if (l[i].client==ws) l.splice(i,1);
+                ws.on('close', function () { // remove all listeners for this client
+                    for (let k in wsListeners) {
+                        let l = wsListeners[k];
+                        for (let i = l.length - 1; i >= 0; i--) {
+                            if (l[i].client == ws) l.splice(i, 1);
                         }
                     }
                 });
@@ -281,7 +281,7 @@ const manager = (() => {
                                     assert(params);
                                 }
                                 if (json.action in controler) {
-                                    let ret = await run(json.action,params);
+                                    let ret = await run(json.action, params);
                                     ws.send(JSON.stringify({
                                         ajax: json.ajax,
                                         success: ret
@@ -319,7 +319,7 @@ const manager = (() => {
                             assert(params);
                         }
                         if (request.action in controler) {
-                            let ret = await run(request.action,params);
+                            let ret = await run(request.action, params);
                             if (!response.writableEnded) {
                                 if (ret === undefined) { // no response, call end() to conclude the request
                                     response.end();
