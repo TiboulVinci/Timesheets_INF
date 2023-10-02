@@ -5,10 +5,12 @@ const config = (() => {
     const args = process.argv;
     if (args.length > 0) {
         let js = args[args.length - 1];
-        if (js.toLowerCase().endsWith(".js") && js.toLowerCase() != "server.js") {
+        if (path.resolve(__filename) != path.resolve(js) && js.toLowerCase().endsWith(".js")) {
+            console.log("Config file is "+path.resolve(js));
             return require(path.join("..", js));
         }
     }
+    console.log("Config file is "+path.resolve("./config.js"));
     return require("./config.js");
 })();
 
