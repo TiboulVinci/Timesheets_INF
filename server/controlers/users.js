@@ -45,7 +45,7 @@ module.exports = ({ HTTPError, model, user, assert }) => {
                 // check if params.user_id is working on an universe that does not belong to user.user_id
                 let u = model.users.getAllUniverses(params.user_id);
                 for (let i = 0; i < u.length; i++) {
-                    if (u[i].user_id != user.user_id) {
+                    if (u[i].creator_id != user.user_id) {
                         throw new HTTPError("This user is using a universe that does not belong to you and cannot be deleted.");
                     }
                 }
