@@ -913,7 +913,7 @@ const palette = ['#5BC0EB', '#FDE74C', '#9BC53D', '#C3423F', '#211A1E', "#a3d9ff
 const getPaletteColor = function (index) {
     if (index < 0) return '#FFFFFF';
     if (index < palette.length) return palette[index];
-    let count = Math.floor(index / palette.length);
+    let count = Math.floor(index / palette.length) + 1;
     if (count % 2 == 0) {
         count = count / 2;
     } else {
