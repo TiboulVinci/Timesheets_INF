@@ -17,13 +17,16 @@
                 success(response) {
                     table.set(response);
                     if (focus) {
-                        response.sort((a,b)=>a.timeentry_id>b.timeentry_id);
+                        let last=0;
+                        for(let i=0; i<response.length; i++) {
+                            if (response[i].group_id>last) last=response[i].group_id;
+                        }
                         let rows=table.get();
                         for(let i=0; i<rows.length; i++) {
                             if (rows[i].timeentry_id==response[0].timeentry_id) {
                                 let tr=table.root.querySelector("tbody").children[i];
                                 let td=tr.children[0];
-                                if (td.innerText==text) {
+                                if (td.children[0].value==text) {
                                     td.focus();
                                     let sel, range;
                                     if (window.getSelection && document.createRange) {
