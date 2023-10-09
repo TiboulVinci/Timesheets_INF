@@ -246,20 +246,7 @@
                     success(response) {
                         table.appendRow(response);
                         let tr = table.root.querySelector("tbody tr:last-child");
-                        let td = tr.children[0];
-                        td.focus();
-                        let sel, range;
-                        if (window.getSelection && document.createRange) {
-                            range = document.createRange();
-                            range.selectNodeContents(td);
-                            sel = window.getSelection();
-                            sel.removeAllRanges();
-                            sel.addRange(range);
-                        } else if (document.body.createTextRange) {
-                            range = document.body.createTextRange();
-                            range.moveToElementText(td);
-                            range.select();
-                        }
+                        table.focus(tr);
                     }
                 });
             }

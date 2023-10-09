@@ -6,7 +6,7 @@
     let table = smartTable({
         root: document.querySelector('#groups table'),
         filter: document.querySelector('#groups input'),
-        refresh(focus, text) {
+        refresh(focus) {
             let search = {};
             let uid = parseInt(universeSelect.value);
             search.universe_id = isNaN(uid) ? -1 : uid;
@@ -23,24 +23,9 @@
                         }
                         let rows=table.get();
                         for(let i=0; i<rows.length; i++) {
-                            if (rows[i].timeentry_id==response[0].timeentry_id) {
-                                let tr=table.root.querySelector("tbody").children[i];
-                                let td=tr.children[0];
-                                if (td.children[0].value==text) {
-                                    td.focus();
-                                    let sel, range;
-                                    if (window.getSelection && document.createRange) {
-                                        range = document.createRange();
-                                        range.selectNodeContents(td);
-                                        sel = window.getSelection();
-                                        sel.removeAllRanges();
-                                        sel.addRange(range);
-                                    } else if (document.body.createTextRange) {
-                                        range = document.body.createTextRange();
-                                        range.moveToElementText(td);
-                                        range.select();
-                                    }
-                                }
+                            if (last==response[i].group_id) {
+                                table.focus(i);
+                                break;
                             }
                         }
                     } 
@@ -195,8 +180,8 @@
                     name: "New Group",
                     universe_id: universeSelect.value
                 },
-                success() {
-                    table.refresh(true,"New Group");
+                success(response) {
+                    table.refresh(true);
                     mispaf.ajaxDefault.success();
                 }
             })

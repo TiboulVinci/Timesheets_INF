@@ -21,7 +21,18 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\server\\server.js",
-            "args": ["server/demo.js"]
+            "args": ["demo.js"]
+        },        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "Launch Backup Prod",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\server\\server.js",
+            "args": ["prod.js"]
         }
     ]
 }
+
+

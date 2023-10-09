@@ -219,23 +219,8 @@
                             let rows=table.get();
                             for(let i=0; i<rows.length; i++) {
                                 if (rows[i].task_id==last) {
-                                    let tr=table.root.querySelector("tbody").children[i];
-                                    let td=tr.children[0];
-                                    if (td.children[0].value==text) {
-                                        td.focus();
-                                        let sel, range;
-                                        if (window.getSelection && document.createRange) {
-                                            range = document.createRange();
-                                            range.selectNodeContents(td);
-                                            sel = window.getSelection();
-                                            sel.removeAllRanges();
-                                            sel.addRange(range);
-                                        } else if (document.body.createTextRange) {
-                                            range = document.body.createTextRange();
-                                            range.moveToElementText(td);
-                                            range.select();
-                                        }
-                                    }
+                                    table.focus(i,text);
+                                    break;
                                 }
                             }
                         } 

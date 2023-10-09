@@ -274,6 +274,42 @@ function smartTable({ root, refresh, columns, onadd, filter, buttons, excel = tr
             if (idx == -1) throw new Error("Unknown row");
             data.splice(idx, 1);
             tbody.removeChild(tbody.children[idx]);
+        },
+        focus(which, condition) {
+            let tgt;
+            if (parseInt(which) === which) { // which is an integer ?
+                tgt = tbody.children[which]; // take the corresponding row
+            } else {
+                tgt = which;
+            }
+            if (tgt.tagName == "TR") { // tgt is TR ?
+                tgt = tgt.children[0]; // take the first TD
+            }
+            let txt;
+            if (tgt.querySelector("input") != null) { // <input> in tgt
+                tgt = tgt.querySelector("input");
+                txt = tgt.value;
+            } else {
+                txt = tgt.innerText;
+            }
+            if (condition && condition != txt) return; // there is a condition that is not met
+            tgt.focus();
+            if (tgt.tagName == "INPUT") {
+                tgt.select();
+            } else {
+                let sel, range;
+                if (window.getSelection && document.createRange) {
+                    range = document.createRange();
+                    range.selectNodeContents(tgt);
+                    sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else if (document.body.createTextRange) {
+                    range = document.body.createTextRange();
+                    range.moveToElementText(tgt);
+                    range.select();
+                }
+            }
         }
     }
 }
