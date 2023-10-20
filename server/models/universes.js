@@ -72,7 +72,7 @@ ORDER BY universes.registrable DESC, universes.active DESC, universes.name ASC`)
         },
         getStats(universeid) {
             return db.prepare(`
-SELECT groups.group_id, groups.name, slices.slice_id, SUM(timeentries.length) AS length, COUNT(DISTINCT timeentry_id) AS countte
+SELECT groups.group_id, groups.name, slices.slice_id, SUM(timeentries.length) AS length, COUNT(DISTINCT timeentry_id) AS countte, COUNT(DISTINCT usersgroups.user_id) AS userscount
 FROM groups INNER JOIN usersgroups ON groups.group_id=usersgroups.group_id
 INNER JOIN users ON usersgroups.user_id=users.user_id
 INNER JOIN timeentries ON timeentries.user_id=users.user_id
