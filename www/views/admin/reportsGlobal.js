@@ -167,18 +167,20 @@
                     }
                     return ret;
                 }
+                let mean=describe.mean(stats);
                 datasets2.unshift({
-                    data: toArr(describe.mean(stats)),
+                    data: toArr(mean),
                     type: "line",
-                    label: "Average",
+                    label: "Average ("+mean.toFixed(0)+")",
                     fill:false,
                     borderColor:'rgba(0,255,0,0.2)',
                     pointRadius:1
                 });
+                let median=describe.median(stats)
                 datasets2.unshift({
-                    data: toArr(describe.median(stats)),
+                    data: toArr(median),
                     type: "line",
-                    label: "Median",
+                    label: "Median ("+median.toFixed(0)+")",
                     fill:false,
                     borderColor:'rgba(0,0,255,0.2)',
                     pointRadius:1
