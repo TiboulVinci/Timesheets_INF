@@ -77,19 +77,23 @@
                 let pergroup = {};
                 let groupname = {};
                 let userscount = {};
+                let grouptotal = {};
                 for (let i = 0; i < response.data.length; i++) {
                     let e = response.data[i];
                     if (!(e.group_id in pergroup)) {
                         pergroup[e.group_id] = {};
                         groupname[e.group_id] = e.name;
                         userscount[e.group_id] = [];
+                        grouptotal[e.group_id] = 0;
                     }
                     pergroup[e.group_id][e.slice_id] = e.length;
                     userscount[e.group_id].push(e.userscount);
+                    grouptotal[e.group_id] += e.length;
                 }
                 let datasets = [];
                 let colors = [];
                 let idx = 0;
+
                 for (let u in pergroup) {
                     let data = [];
                     for (let k in response.slices) {
@@ -134,11 +138,11 @@
                     userscount[g] = Math.round(userscount[g].reduce((a, b) => a + b, 0) / userscount[g].length);
                 }
 
-
                 for (let i = 0; i < datasets.length; i++) { // compute average time spent by student for each group
                     for (let j = 0; j < datasets[i].data.length; j++) {
                         datasets[i].data[j] = datasets[i].data[j] / userscount[datasets[i].group_id];
                     }
+                    datasets[i].label += " (" + (datasets[i].data.reduce((a, b) => a + b, 0) / 60).toFixed(2) + "h)";
                 }
 
                 datasets.sort((a, b) => b.data.reduce((a, b) => a + b, 0) - a.data.reduce((a, b) => a + b, 0)); // sort most spent times first
@@ -150,7 +154,7 @@
                         data.push(datasets[j].data[i]);
                     }
                     datasets2.push({
-                        label: labels[i],
+                        label:labels[i],
                         data: data,
                         backgroundColor: getPaletteColor(i),
                         stack: 'Stack 0'
@@ -167,38 +171,24 @@
                     }
                     return ret;
                 }
+                let mean = describe.mean(stats);
                 datasets2.unshift({
-                    data: toArr(describe.mean(stats)),
+                    data: toArr(mean),
                     type: "line",
-                    label: "Average",
-                    fill:false,
-                    borderColor:'rgba(0,255,0,0.2)',
-                    pointRadius:1
+                    label: "Average (" + (mean / 60).toFixed(2) + "h)",
+                    fill: false,
+                    borderColor: 'rgba(0,255,0,0.2)',
+                    pointRadius: 1
                 });
+                let median = describe.median(stats)
                 datasets2.unshift({
-                    data: toArr(describe.median(stats)),
+                    data: toArr(median),
                     type: "line",
-                    label: "Median",
-                    fill:false,
-                    borderColor:'rgba(0,0,255,0.2)',
-                    pointRadius:1
+                    label: "Median (" + (median / 60).toFixed(2) + "h)",
+                    fill: false,
+                    borderColor: 'rgba(0,0,255,0.2)',
+                    pointRadius: 1
                 });
-/*                datasets2.unshift({
-                    data: toArr(describe.q25(stats)),
-                    type: "line",
-                    label: "Quantile 25",
-                    fill:false,
-                    borderColor:'rgba(255,0,0,0.2)',
-                    pointRadius:1
-                });
-                datasets2.unshift({
-                    data: toArr(describe.q75(stats)),
-                    type: "line",
-                    label: "Quantile 75",
-                    fill:false,
-                    borderColor:'rgba(255,0,0,0.2)',
-                    pointRadius:1
-                });*/
 
                 let data = {
                     labels: [],
@@ -220,7 +210,7 @@
                             responsive: false,
                             scales: {
                                 x: {
-                                    stacked: true,
+                                    stacked: true
                                 },
                                 y: {
                                     stacked: true
@@ -229,7 +219,6 @@
                         }
                     }
                 });
-
             }
         })
 
