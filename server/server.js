@@ -15,6 +15,7 @@ const config = (() => {
 })();
 
 const db = require("better-sqlite3")(config.dbfile);
+db.run("PRAGMA journal_mode = WAL");
 const jwt = require("jsonwebtoken");
 const { AsyncLocalStorage } = require('async_hooks');
 const asyncLocalStorage = new AsyncLocalStorage();
