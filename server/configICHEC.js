@@ -8,4 +8,5 @@ module.exports={
     uploadDirectory:"uploads",
     useTempFiles:false,
     tempFileDir:"temp"
+    
 }
