@@ -105,6 +105,16 @@
                                         } else {
                                             data = [];
                                         }
+                                        let locked=false;
+                                        for(let j=0; j<data.length; j++) {
+                                            if ((new Date(data[j].creation) <= new Date(slice.start_date)) && slice.locked == 1) {
+                                                locked=true;
+                                                break;
+                                            }
+                                        }
+                                        if (locked) {
+                                            head.innerHTML+="&#128274;";
+                                        }
                                         let prog = document.createElement("DIV");
                                         prog.classList.add("progress");
                                         progresses.appendChild(prog);
